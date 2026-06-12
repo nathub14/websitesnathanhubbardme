@@ -45,3 +45,5 @@ rendering) and screenshots several points along the walk into `shots/`:
 ```sh
 node tools/shot.mjs 0.1 0.5 0.9   # custom walk positions (0..1)
 ```
+
+test
