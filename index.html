@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VELA — District 7 // ヴェラ第七区</title>
+  <meta name="description" content="A first-person walk through a rain-soaked neon megacity." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2304070c'/%3E%3Ctext x='16' y='23' font-family='Arial Black' font-size='19' fill='%2319e3ff' text-anchor='middle'%3EV%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Rajdhani:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cyan: #19e3ff;
+      --pink: #ff2d78;
+      --ink: #04070c;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: auto; }
+    body {
+      background: var(--ink);
+      color: #cfe9f2;
+      font-family: 'Rajdhani', sans-serif;
+      overflow-x: hidden;
+    }
+    /* tall body provides the scroll track */
+    #scroll-track { height: 900vh; pointer-events: none; }
+    #app {
+      position: fixed; inset: 0;
+      z-index: 0;
+    }
+    canvas { display: block; }
+
+    /* ---------- HUD ---------- */
+    #hud {
+      position: fixed; inset: 0; z-index: 10;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 2.5s ease;
+    }
+    #hud.on { opacity: 1; }
+
+    .title-block {
+      position: absolute; top: 38px; left: 44px;
+      line-height: 1;
+    }
+    .title-block .kicker {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 500; font-size: 11px; letter-spacing: 0.55em;
+      color: var(--cyan); opacity: 0.85;
+      margin-bottom: 10px;
+      text-shadow: 0 0 12px rgba(25,227,255,.6);
+    }
+    .title-block h1 {
+      font-family: 'Michroma', sans-serif;
+      font-size: clamp(26px, 4vw, 44px);
+      font-weight: 400; letter-spacing: 0.18em;
+      color: #f4fbff;
+      text-shadow: 0 0 24px rgba(25,227,255,.35), 0 0 80px rgba(255,45,120,.25);
+    }
+    .title-block .jp {
+      margin-top: 10px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-weight: 300; font-size: 13px; letter-spacing: 0.85em;
+      color: rgba(255,45,120,.9);
+      text-shadow: 0 0 14px rgba(255,45,120,.55);
+    }
+
+    .readout {
+      position: absolute; top: 44px; right: 44px;
+      text-align: right;
+      font-size: 12px; font-weight: 500; letter-spacing: 0.22em;
+      color: rgba(207,233,242,.75);
+    }
+    .readout .row { margin-bottom: 6px; }
+    .readout .val { color: var(--cyan); text-shadow: 0 0 10px rgba(25,227,255,.5); }
+    .readout .warn { color: var(--pink); text-shadow: 0 0 10px rgba(255,45,120,.5); }
+
+    .hint {
+      position: absolute; bottom: 42px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px; font-weight: 500; letter-spacing: 0.5em;
+      color: rgba(207,233,242,.55);
+      text-transform: uppercase;
+      animation: pulse 3.2s ease-in-out infinite;
+      white-space: nowrap;
+    }
+    .hint .arrow { display: block; text-align: center; margin-top: 8px; letter-spacing: 0; opacity: .8; }
+    @keyframes pulse { 0%,100% { opacity: .35; } 50% { opacity: .9; } }
+
+    .corner { position: absolute; width: 26px; height: 26px; opacity: .5; }
+    .corner::before, .corner::after { content:''; position:absolute; background: var(--cyan); box-shadow: 0 0 8px rgba(25,227,255,.8); }
+    .corner::before { width: 100%; height: 1px; }
+    .corner::after { width: 1px; height: 100%; }
+    .corner.tl { top: 22px; left: 24px; }
+    .corner.tr { top: 22px; right: 24px; transform: scaleX(-1); }
+    .corner.bl { bottom: 22px; left: 24px; transform: scaleY(-1); }
+    .corner.br { bottom: 22px; right: 24px; transform: scale(-1); }
+
+    .progress {
+      position: absolute; bottom: 46px; right: 44px;
+      width: 140px; height: 2px;
+      background: rgba(207,233,242,.15);
+    }
+    .progress .bar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--cyan), var(--pink));
+      box-shadow: 0 0 10px rgba(25,227,255,.7);
+    }
+    .progress .label {
+      position: absolute; top: -22px; right: 0;
+      font-size: 10px; letter-spacing: .3em; color: rgba(207,233,242,.6);
+    }
+
+    #sound-btn {
+      position: absolute; bottom: 42px; left: 44px;
+      pointer-events: auto;
+      background: transparent;
+      border: 1px solid rgba(25,227,255,.25);
+      color: rgba(207,233,242,.6);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 11px; font-weight: 500; letter-spacing: .3em;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: all .3s ease;
+    }
+    #sound-btn:hover { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 14px rgba(25,227,255,.25); }
+    #sound-btn.on { color: var(--cyan); border-color: rgba(25,227,255,.6); text-shadow: 0 0 8px rgba(25,227,255,.6); }
+
+    /* ---------- BOOT OVERLAY ---------- */
+    #boot {
+      position: fixed; inset: 0; z-index: 20;
+      background: var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+      transition: opacity 1.8s ease;
+    }
+    #boot.off { opacity: 0; pointer-events: none; }
+    #boot .logo {
+      font-family: 'Michroma', sans-serif;
+      font-size: clamp(34px, 6vw, 64px); letter-spacing: .3em;
+      color: #f4fbff;
+      text-shadow: 0 0 30px rgba(25,227,255,.5);
+      animation: flicker 2.2s linear infinite;
+    }
+    #boot .sub {
+      margin-top: 18px;
+      font-size: 12px; letter-spacing: .6em; color: var(--pink);
+      text-shadow: 0 0 12px rgba(255,45,120,.6);
+    }
+    #boot .status {
+      margin-top: 44px; font-size: 11px; letter-spacing: .3em;
+      color: rgba(207,233,242,.5);
+    }
+    @keyframes flicker {
+      0%, 100% { opacity: 1; } 92% { opacity: 1; }
+      93% { opacity: .4; } 94% { opacity: 1; } 96% { opacity: .6; } 97% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div id="scroll-track"></div>
+  <div id="app"></div>
+
+  <div id="hud">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="title-block">
+      <div class="kicker">SECTOR 7 — NIGHT CYCLE</div>
+      <h1>VELA</h1>
+      <div class="jp">ヴェラ・第七区</div>
+    </div>
+    <div class="readout">
+      <div class="row">LOCAL <span class="val" id="ro-time">02:47</span></div>
+      <div class="row">RAIN <span class="warn">86%</span> &nbsp;TEMP <span class="val">11°C</span></div>
+      <div class="row">GRID <span class="val" id="ro-grid">7F-0021</span></div>
+    </div>
+    <div class="hint">Scroll to walk<span class="arrow">▼</span></div>
+    <div class="progress"><div class="label">AVENUE 09</div><div class="bar" id="ro-bar"></div></div>
+    <button id="sound-btn">○ SOUND OFF</button>
+  </div>
+
+  <div id="boot">
+    <div class="logo">VELA</div>
+    <div class="sub">DISTRICT SEVEN</div>
+    <div class="status" id="boot-status">CALIBRATING OPTICS…</div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
