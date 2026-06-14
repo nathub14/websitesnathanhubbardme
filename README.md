@@ -1,49 +1,41 @@
-# VELA — District 7 // ヴェラ第七区
+# Small Worlds
 
-A first-person walk through a rain-soaked, neon-drenched cyberpunk megacity,
-rendered in real time in the browser. Scroll to walk the avenue; move the
-mouse to look around. If you stop scrolling, the city keeps walking for you.
+The hub for **websites.nathanhubbard.me** — a small, cinematic gallery of the
+interactive web experiments Nathan Hubbard builds (in conversation with Claude).
 
-![FPS](https://img.shields.io/badge/fps-~100-19e3ff) ![stack](https://img.shields.io/badge/three.js-r184-ff2d78)
+Each project is presented as a *living miniature*: the previews aren't
+screenshots, they're animated CSS/Canvas dioramas that hint at the world behind
+the link.
 
-## What's in the frame
+| # | World | Link |
+|---|-------|------|
+| 01 | Ocean — water & light | https://ocean.websites.nathanhubbard.me |
+| 02 | Train — a window-seat journey | https://train.websites.nathanhubbard.me |
+| 03 | Vela — neon District 7 | https://vela.websites.nathanhubbard.me |
 
-- **Procedural city** — ~200 instanced towers with a custom facade shader:
-  per-building window pitch, sparse clustered lit windows, flickering tubes,
-  storefront shutters, neon edge trims, rooftop beacons, AC-unit greebles.
-- **Wet street** — true planar reflections (mirrored scene render target)
-  distorted by scrolling rain-ripple noise, expanding raindrop rings inside
-  puddle masks, distance blur via render-target mipmaps.
-- **Holographic mega-billboards** — glitch bands, chromatic splitting,
-  scanlines, rolling refresh, all reflected in the asphalt.
-- **The Oracle** — a ghostly holographic orb hanging over the end of the avenue.
-- **Atmosphere** — GPU rain (2,600 instanced streaks), steam vents, drifting
-  fog sheets, layered distance-haze glows, dust motes, a cloud deck lit from
-  below by the city.
-- **Life** — rim-lit pedestrian silhouettes with umbrellas, air-traffic light
-  trails and dashed traffic streams overhead, catenary cables with lanterns,
-  glowing vending machines.
-- **Post** — HDR pipeline with mipmap bloom, ACES tone mapping, chromatic
-  aberration, film grain, vignette, SMAA, and a final color grade.
-- **Sound** — procedural WebAudio rain + city rumble (toggle, bottom-left).
+## Stack
 
-Everything is generated in code — no textures, models, or assets are loaded.
+Pure static site. No build step, no dependencies.
 
-## Run
+- `index.html` — structure & copy
+- `styles.css` — the dioramas, typography, theming
+- `main.js` — custom cursor, constellation intro, scroll theming, parallax
 
-```sh
-npm install
-npm run dev      # http://localhost:5179
-npm run build    # production build in dist/
-```
+Just open `index.html` or serve the folder statically.
 
-## Iterating on visuals
+## Adding a world
 
-`npm run shot` drives the site headlessly (Edge + D3D11 ANGLE for real GPU
-rendering) and screenshots several points along the walk into `shots/`:
+1. Duplicate a `<section class="world">` block in `index.html`, bump the number,
+   swap the copy, host, and diorama markup.
+2. Add a matching diorama style block in `styles.css`.
+3. Register its accent palette in the `THEMES` map in `main.js` and add a
+   `<a>` to the spine index.
 
-```sh
-node tools/shot.mjs 0.1 0.5 0.9   # custom walk positions (0..1)
-```
+## Preview tool
 
-test
+`tools/shot.mjs` renders each section to PNG via Playwright for a quick visual
+check. Generated `shot-*.png` files are gitignored.
+
+---
+
+Inquiries: **contact@nathanhubbard.me**
